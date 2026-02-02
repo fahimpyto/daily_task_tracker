@@ -3,302 +3,825 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Habit Tracker Pro</title>
+    <title>Habit Tracker Pro</title>
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #151925;
+            --bg-card: #1a1f35;
+            --bg-elevated: #222944;
             --primary: #6366f1;
-            --primary-hover: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
             --accent: #10b981;
+            --accent-light: #34d399;
             --danger: #ef4444;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --glass: rgba(30, 41, 59, 0.7);
+            --warning: #f59e0b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #2d3548;
+            --border-light: #374151;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-accent: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
         
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-image: radial-gradient(circle at top right, #1e1b4b, transparent 40%),
-                              radial-gradient(circle at bottom left, #0f172a, transparent 40%);
+            overflow-x: hidden;
+            position: relative;
         }
 
-        /* --- Header --- */
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Header */
         header {
-            padding: 15px 20px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(21, 25, 37, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
         }
 
-        .header-controls { display: flex; gap: 10px; align-items: center; width: 100%; justify-content: center; }
-        
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
         h1 {
-            font-size: 1.2rem;
-            background: linear-gradient(to right, #818cf8, #34d399);
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #818cf8 0%, #34d399 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-            font-weight: 800;
-            margin-right: auto;
+            background-clip: text;
+        }
+
+        .month-selector-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            padding: 0.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
         select, input[type="number"] {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 8px 12px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            padding: 0.625rem 1rem;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             outline: none;
+            transition: all 0.2s;
+            cursor: pointer;
         }
 
-        /* --- Layout --- */
+        select:hover, input[type="number"]:hover {
+            border-color: var(--primary-light);
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        input[type="number"] {
+            width: 85px;
+        }
+
+        /* Main Layout */
         .container {
+            position: relative;
+            z-index: 1;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
-            width: 100%;
-            flex: 1;
+            padding: 2rem 1.5rem;
             display: grid;
-            grid-template-columns: 300px 1fr 300px;
-            gap: 20px;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 120px);
         }
 
+        /* Cards */
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
+            border-radius: 20px;
+            padding: 1.75rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
             height: fit-content;
         }
 
-        .card h2 {
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            color: var(--text-main);
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
         }
 
-        /* --- Table & Inputs --- */
-        .habit-table-container { min-width: 800px; overflow-x: auto; }
-        
-        .habit-table { width: 100%; border-collapse: collapse; }
-        .habit-table th, .habit-table td {
-            border: 1px solid var(--border);
-            padding: 8px;
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.625rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Stats Card */
+        .stats-container {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* List Items */
+        .list-container {
+            max-height: 350px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding-right: 0.25rem;
+        }
+
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .list-container::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        .list-container::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 3px;
+        }
+
+        .list-container::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        .list-item {
+            background: var(--bg-elevated);
+            border-left: 3px solid var(--primary);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            transition: all 0.2s;
+            animation: slideIn 0.3s ease;
+        }
+
+        .list-item:hover {
+            background: var(--bg-secondary);
+            transform: translateX(4px);
+        }
+
+        .list-item.achievement {
+            border-left-color: var(--accent);
+        }
+
+        .list-item-text {
+            flex: 1;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.125rem;
+            flex-shrink: 0;
+        }
+
+        .delete-btn:hover {
+            background: var(--danger);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* Input Group */
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 10px;
+        }
+
+        /* Chart */
+        canvas {
+            width: 100% !important;
+            height: 180px !important;
+            border-radius: 12px;
+        }
+
+        /* Notes */
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            color: var(--text-primary);
+            padding: 1rem;
+            resize: vertical;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Habit Table - Desktop */
+        .habit-table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            background: var(--bg-elevated);
+        }
+
+        .habit-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .habit-table th {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1rem 0.75rem;
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .habit-table th:first-child {
+            text-align: left;
+            padding-left: 1.5rem;
+            border-top-left-radius: 12px;
+        }
+
+        .habit-table th:last-child {
+            border-top-right-radius: 12px;
+        }
+
+        .habit-table td {
+            padding: 1rem 0.75rem;
+            border-bottom: 1px solid var(--border);
             text-align: center;
         }
-        
-        .habit-table th {
-            background: rgba(0,0,0,0.3);
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.8rem;
-            text-transform: uppercase;
+
+        .habit-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .habit-table tr:hover {
+            background: rgba(99, 102, 241, 0.05);
         }
 
         .habit-name-cell {
-            text-align: left;
-            min-width: 160px;
-            padding-left: 15px !important;
-            color: var(--primary);
+            text-align: left !important;
+            min-width: 200px;
+            padding-left: 1.5rem !important;
             font-weight: 600;
+            color: var(--primary-light);
             cursor: text;
-            transition: background 0.2s;
-            background: rgba(255,255,255,0.02);
-        }
-        .habit-name-cell:hover { background: rgba(255,255,255,0.05); }
-        .habit-name-cell:focus {
-            background: rgba(255,255,255,0.1);
-            outline: 2px solid var(--primary);
-            border-radius: 4px;
-        }
-
-        .action-cell { width: 40px; background: rgba(0,0,0,0.2); }
-
-        .check-cell { 
-            width: 30px; 
-            height: 30px; 
-            cursor: pointer; 
-            position: relative;
-        }
-        .check-cell input { opacity: 0; width: 100%; height: 100%; cursor: pointer; position: absolute; z-index: 2; }
-        .custom-checkbox {
-            width: 100%; height: 100%; border: 2px solid var(--border);
-            border-radius: 6px; display: flex; align-items: center; justify-content: center;
             transition: all 0.2s;
         }
+
+        .habit-name-cell:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: -2px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 8px;
+        }
+
+        .action-cell {
+            width: 60px;
+        }
+
+        /* Checkbox Styling */
+        .check-cell {
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+        }
+
+        .check-cell input {
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            position: absolute;
+            z-index: 2;
+            margin: 0;
+        }
+
+        .custom-checkbox {
+            width: 36px;
+            height: 36px;
+            border: 2px solid var(--border-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--bg-card);
+            position: relative;
+        }
+
+        .check-cell:hover .custom-checkbox {
+            border-color: var(--primary-light);
+            transform: scale(1.1);
+        }
+
         .check-cell input:checked + .custom-checkbox {
-            background: var(--accent); border-color: var(--accent);
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-        }
-        .custom-checkbox::after { content: '✓'; color: #fff; font-weight: bold; display: none; }
-        .check-cell input:checked + .custom-checkbox::after { display: block; }
-
-        /* --- UI Components --- */
-        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
-        .btn-add { background: var(--primary); color: white; font-weight: bold; }
-        .btn-add:hover { background: var(--primary-hover); }
-        .btn-danger { background: var(--bg-dark); color: var(--danger); border: 1px solid var(--border); }
-        .btn-danger:hover { background: var(--danger); color: white; }
-
-        input[type="text"] {
-            flex: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border);
-            background: var(--bg-dark); color: white; width: 100%;
+            background: var(--gradient-accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            animation: checkPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        #achievement-list, #habit-list {
-            list-style: none; max-height: 400px; overflow-y: auto;
-        }
-        .list-item {
-            background: rgba(255,255,255,0.03); border-left: 4px solid var(--primary);
-            padding: 10px; margin-bottom: 8px; border-radius: 4px; font-size: 0.9rem;
-            display: flex; justify-content: space-between; align-items: center;
-            animation: slideIn 0.3s ease;
-        }
-        .delete-icon { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem; padding: 0 5px; }
-        canvas { width: 100% !important; height: 200px !important; }
-        textarea {
-            width: 100%; height: 150px; background: rgba(0,0,0,0.2); border: 1px solid var(--border);
-            border-radius: 8px; color: var(--text-main); padding: 10px; resize: vertical;
+        .custom-checkbox::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 1.25rem;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.2s;
         }
 
+        .check-cell input:checked + .custom-checkbox::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state-text {
+            font-size: 1rem;
+        }
+
+        /* Toast */
         #toast {
-            position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: #000;
-            padding: 12px 24px; border-radius: 8px; font-weight: bold;
-            transform: translateY(100px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000;
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--gradient-accent);
+            color: white;
+            padding: 1rem 1.75rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transform: translateY(150px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
         }
 
-        /* --- RESPONSIVE DESIGN (Mobile Friendly) --- */
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Mobile Responsive Design */
         @media (max-width: 1024px) {
-            .container { grid-template-columns: 1fr; }
-            .sidebar-left, .sidebar-right { order: 2; } /* Move sidebars below main */
-            .main-content { order: 1; }
-            header { justify-content: center; }
-            h1 { margin: 0; text-align: center; width: 100%; }
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                order: 2;
+            }
+
+            .main-content {
+                order: 1;
+            }
         }
 
         @media (max-width: 768px) {
-            .habit-table-container { min-width: 100%; } /* Remove horizontal scroll on container */
-            
-            /* Transform Table to Card Layout */
-            .habit-table, .habit-table thead, .habit-table tbody, .habit-table tr, .habit-table td {
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo {
+                width: 100%;
+                justify-content: center;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+            }
+
+            .month-selector-container {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .container {
+                padding: 1.5rem 1rem;
+                gap: 1.5rem;
+            }
+
+            .card {
+                padding: 1.25rem;
+            }
+
+            /* Mobile Table Design */
+            .habit-table-wrapper {
+                overflow: visible;
+                background: transparent;
+            }
+
+            .habit-table,
+            .habit-table thead,
+            .habit-table tbody,
+            .habit-table tr,
+            .habit-table td {
                 display: block;
             }
 
-            .habit-table thead { display: none; } /* Hide headers */
+            .habit-table thead {
+                display: none;
+            }
 
             .habit-table tr {
-                background: var(--bg-card);
+                background: var(--bg-elevated);
                 border: 1px solid var(--border);
                 border-radius: 16px;
-                margin-bottom: 25px;
+                margin-bottom: 1.5rem;
                 padding: 0;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-                overflow: hidden; /* Contains the scrollable area */
+                box-shadow: var(--shadow-md);
+                overflow: hidden;
             }
 
-            /* Habit Name Area */
+            .habit-table tr:hover {
+                background: var(--bg-elevated);
+            }
+
+            /* Habit Name Header */
             .habit-name-cell {
                 width: 100% !important;
-                background: rgba(0,0,0,0.2);
-                padding: 15px !important;
+                min-width: unset !important;
+                background: var(--bg-secondary);
+                padding: 1.25rem 1rem !important;
                 font-size: 1.1rem;
-                border-bottom: 1px solid var(--border);
-                display: flex;
+                border-bottom: 2px solid var(--border);
+                display: flex !important;
                 justify-content: space-between;
                 align-items: center;
+                text-align: left !important;
+                border-radius: 0;
             }
 
-            /* Delete Button inside name on mobile */
+            .habit-name-cell:focus {
+                outline: none;
+                background: rgba(99, 102, 241, 0.15);
+            }
+
+            /* Delete button in header on mobile */
             .action-cell {
-                display: block;
+                display: inline-block;
                 width: auto;
                 background: transparent;
                 border: none;
-                padding: 0 0 0 15px;
-            }
-            .action-cell button {
-                background: rgba(239, 68, 68, 0.2);
-                color: #ef4444;
-                border: 1px solid #ef4444;
-                width: 36px; height: 36px;
-                border-radius: 50%;
-                display: flex; align-items: center; justify-content: center;
-                font-size: 1.2rem;
+                padding: 0;
             }
 
-            /* Checkboxes Area */
+            .action-cell .delete-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+            }
+
+            /* Days Grid */
             .habit-table td:not(.habit-name-cell):not(.action-cell) {
                 display: inline-flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                width: 45px; /* Fixed width for day cells */
-                height: 65px;
+                width: calc(14.28% - 2px);
+                min-height: 70px;
                 border: none;
-                border-right: 1px solid rgba(255,255,255,0.05);
-                flex-shrink: 0; /* Prevent shrinking */
-                padding: 0;
+                border-right: 1px solid rgba(255, 255, 255, 0.05);
+                padding: 0.5rem 0.25rem;
+                background: var(--bg-card);
             }
 
-            /* Create a horizontal scroll wrapper for the checkboxes */
-            .habit-table tr::after {
-                content: "";
-                display: flex;
-                overflow-x: auto;
-                padding: 10px 5px;
-                /* Hide scrollbar */
-                scrollbar-width: none; 
-                -ms-overflow-style: none;
+            .habit-table tr td:nth-last-child(2) {
+                border-right: none;
             }
-            .habit-table tr::-webkit-scrollbar { display: none; }
 
-            /* Add Day Number above checkbox using Data Attribute */
+            /* Day label */
             .check-cell::before {
                 content: attr(data-day);
                 display: block;
                 font-size: 0.7rem;
                 color: var(--text-muted);
-                margin-bottom: 4px;
-                font-weight: bold;
+                margin-bottom: 0.375rem;
+                font-weight: 600;
             }
 
-            /* Bigger checkboxes for touch */
-            .check-cell, .custom-checkbox {
-                width: 36px !important;
-                height: 36px !important;
+            .check-cell {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
             }
 
-            /* Empty state for mobile */
-            .habit-table tr td[colspan] {
-                padding: 40px 20px;
-                display: block;
-                text-align: center;
+            .custom-checkbox {
+                width: 32px;
+                height: 32px;
+            }
+
+            /* Empty state mobile */
+            .empty-state {
+                padding: 3rem 1rem;
+            }
+
+            .empty-state-icon {
+                font-size: 3rem;
+            }
+
+            .empty-state-title {
+                font-size: 1.25rem;
+            }
+
+            /* Stats smaller on mobile */
+            .stat-value {
+                font-size: 2.75rem;
+            }
+
+            /* Toast mobile */
+            #toast {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.25rem;
+            }
+
+            h1 {
+                font-size: 1.1rem;
+            }
+
+            select, input[type="number"] {
+                font-size: 0.875rem;
+                padding: 0.5rem 0.75rem;
+            }
+
+            .card-title {
+                font-size: 1.125rem;
+            }
+
+            .stat-value {
+                font-size: 2.5rem;
+            }
+
+            .habit-table td:not(.habit-name-cell):not(.action-cell) {
+                width: calc(16.66% - 2px);
             }
         }
     </style>
@@ -306,66 +829,89 @@
 <body>
 
     <header>
-        <div class="header-controls">
-            <h1 id="page-title">Tracker</h1>
-            <select id="month-selector"></select>
-            <input type="number" id="year-selector" value="2024" min="2020" max="2030" style="width: 80px;">
+        <div class="header-container">
+            <div class="logo">
+                <div class="logo-icon">✓</div>
+                <h1 id="page-title">Habit Tracker</h1>
+            </div>
+            <div class="month-selector-container">
+                <select id="month-selector"></select>
+                <input type="number" id="year-selector" value="2024" min="2020" max="2030">
+                <button class="btn btn-primary btn-icon" onclick="initMonth()">→</button>
+            </div>
         </div>
-        <button class="btn btn-add" onclick="initMonth()">Go</button>
     </header>
 
     <div class="container">
         
-        <aside class="sidebar-left">
+        <aside class="sidebar">
+            <!-- Overview Card -->
             <div class="card">
-                <h2>My Habits</h2>
-                <ul id="habit-list"></ul>
-                <div class="input-group" style="display:flex; gap:5px; margin-top:10px;">
-                    <input type="text" id="new-habit-input" placeholder="New habit name...">
-                    <button class="btn btn-add" onclick="addNewHabit()">+</button>
+                <div class="card-header">
+                    <h2 class="card-title">📊 Overview</h2>
+                </div>
+                <div class="stats-container">
+                    <div class="stat-value" id="total-score">0%</div>
+                    <div class="stat-label">Monthly Completion</div>
+                </div>
+                <canvas id="miniChart"></canvas>
+            </div>
+
+            <!-- My Habits Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🎯 My Habits</h2>
+                    <span class="card-badge" id="habit-count">0</span>
+                </div>
+                <div class="list-container">
+                    <ul id="habit-list"></ul>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="new-habit-input" placeholder="Add new habit...">
+                    <button class="btn btn-primary btn-icon" onclick="addNewHabit()">+</button>
                 </div>
             </div>
 
+            <!-- Achievements Card -->
             <div class="card">
-                <h2>Overview</h2>
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent);" id="total-score">0%</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Monthly Completion</div>
+                <div class="card-header">
+                    <h2 class="card-title">🏆 Achievements</h2>
+                    <span class="card-badge" id="ach-count">0</span>
                 </div>
-                <canvas id="miniChart"></canvas>
+                <div class="list-container">
+                    <ul id="achievement-list"></ul>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="new-ach-input" placeholder="Add achievement...">
+                    <button class="btn btn-primary btn-icon" onclick="addAchievement()">+</button>
+                </div>
+            </div>
+
+            <!-- Notes Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📝 Monthly Notes</h2>
+                </div>
+                <textarea id="monthly-notes" placeholder="Write your thoughts, goals, or reflections here..."></textarea>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="card" style="width: 100%;">
-                <h2>Habit Log</h2>
-                <div class="habit-table-container">
+            <div class="card" style="flex: 1;">
+                <div class="card-header">
+                    <h2 class="card-title">📅 Habit Tracker</h2>
+                </div>
+                <div class="habit-table-wrapper">
                     <table class="habit-table" id="habit-table">
-                        <!-- JS Generated -->
+                        <!-- Generated by JavaScript -->
                     </table>
                 </div>
             </div>
         </main>
 
-        <aside class="sidebar-right">
-            <div class="card">
-                <h2>Achievements <span id="ach-count" style="font-size:0.8rem; color:var(--accent);">0</span></h2>
-                <ul id="achievement-list"></ul>
-                <div class="input-group" style="display:flex; gap:5px; margin-top:10px;">
-                    <input type="text" id="new-ach-input" placeholder="New achievement...">
-                    <button class="btn btn-add" onclick="addAchievement()">+</button>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>Notes</h2>
-                <textarea id="monthly-notes" placeholder="Monthly notes..."></textarea>
-            </div>
-        </aside>
-
     </div>
 
-    <div id="toast">Saved!</div>
+    <div id="toast">✓ Saved!</div>
 
     <script>
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -381,8 +927,13 @@
             monthSelect.appendChild(opt);
         });
 
-        function getStorageKey(year, monthIndex) { return `${year}-${monthIndex}`; }
-        function getDaysInMonth(year, monthIndex) { return new Date(year, monthIndex + 1, 0).getDate(); }
+        function getStorageKey(year, monthIndex) { 
+            return `habitTracker_${year}-${monthIndex}`; 
+        }
+        
+        function getDaysInMonth(year, monthIndex) { 
+            return new Date(year, monthIndex + 1, 0).getDate(); 
+        }
 
         function initMonth() {
             currentSettings.monthIndex = parseInt(monthSelect.value);
@@ -406,7 +957,7 @@
             renderHabitSidebar();
             renderAchievements();
             updateCharts();
-            document.getElementById('monthly-notes').value = appData[key].notes;
+            document.getElementById('monthly-notes').value = appData[key].notes || "";
         }
 
         function renderTable() {
@@ -421,24 +972,28 @@
             if (data.habits.length === 0) {
                 table.innerHTML = `
                     <tr>
-                        <td colspan="${days + 2}" style="text-align:center; padding:40px; color:var(--text-muted);">
-                            <div style="font-size: 3rem; margin-bottom:10px;">📝</div>
-                            No habits added yet.<br>
-                            Use <b>+ Add Habit</b> to get started 🚀
+                        <td colspan="100%">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🎯</div>
+                                <div class="empty-state-title">No habits yet</div>
+                                <div class="empty-state-text">Add your first habit to start tracking!</div>
+                            </div>
                         </td>
                     </tr>
                 `;
                 return;
             }
 
-            // Header (Hidden on Mobile)
+            // Header Row
             const trHead = document.createElement('tr');
-            trHead.innerHTML = '<th>Habit Name</th>';
-            for(let d=1; d<=days; d++) { trHead.innerHTML += `<th>${d}</th>`; }
-            trHead.innerHTML += '<th>Action</th>';
+            trHead.innerHTML = '<th>Habit</th>';
+            for(let d = 1; d <= days; d++) { 
+                trHead.innerHTML += `<th>${d}</th>`; 
+            }
+            trHead.innerHTML += '<th></th>';
             table.appendChild(trHead);
 
-            // Rows
+            // Habit Rows
             data.habits.forEach((habitName, index) => {
                 const tr = document.createElement('tr');
                 
@@ -448,10 +1003,23 @@
                 tdName.contentEditable = true;
                 tdName.textContent = habitName;
                 tdName.onblur = (e) => updateHabitName(index, e.target.textContent);
+                tdName.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.target.blur();
+                    }
+                };
+
+                // Add delete button to name cell for mobile
+                const deleteBtn = document.createElement('span');
+                deleteBtn.className = 'action-cell';
+                deleteBtn.innerHTML = `<button class="delete-btn" onclick="deleteHabit(${index})">×</button>`;
+                tdName.appendChild(deleteBtn);
+                
                 tr.appendChild(tdName);
 
-                // Days
-                for(let d=1; d<=days; d++) {
+                // Day Checkboxes
+                for(let d = 1; d <= days; d++) {
                     const td = document.createElement('td');
                     const checkKey = `${d}-${index}`;
                     const isChecked = data.checks[checkKey] || false;
@@ -465,10 +1033,10 @@
                     tr.appendChild(td);
                 }
 
-                // Action
+                // Action Cell (hidden on mobile, delete button is in name cell)
                 const tdAction = document.createElement('td');
                 tdAction.className = 'action-cell';
-                tdAction.innerHTML = `<button class="btn btn-danger" onclick="deleteHabit(${index})">✕</button>`;
+                tdAction.innerHTML = `<button class="delete-btn" onclick="deleteHabit(${index})" style="display: none;">×</button>`;
                 tr.appendChild(tdAction);
 
                 table.appendChild(tr);
@@ -478,12 +1046,23 @@
         function renderHabitSidebar() {
             const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
             const list = document.getElementById('habit-list');
+            const data = appData[key];
+            
             list.innerHTML = '';
-            appData[key].habits.forEach((h, i) => {
+            document.getElementById('habit-count').textContent = data.habits.length;
+            
+            if (data.habits.length === 0) {
+                list.innerHTML = '<li style="text-align:center; color:var(--text-muted); padding:1rem;">No habits yet</li>';
+                return;
+            }
+
+            data.habits.forEach((h, i) => {
                 const li = document.createElement('li');
                 li.className = 'list-item';
-                li.style.borderColor = 'var(--primary)';
-                li.innerHTML = `<span>${h}</span> <button class="delete-icon" onclick="deleteHabit(${i})">×</button>`;
+                li.innerHTML = `
+                    <span class="list-item-text">${h}</span>
+                    <button class="delete-btn" onclick="deleteHabit(${i})">×</button>
+                `;
                 list.appendChild(li);
             });
         }
@@ -491,24 +1070,38 @@
         function renderAchievements() {
             const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
             const list = document.getElementById('achievement-list');
+            const data = appData[key];
+            
             list.innerHTML = '';
-            document.getElementById('ach-count').textContent = appData[key].achievements.length;
-            appData[key].achievements.forEach((ach, index) => {
+            document.getElementById('ach-count').textContent = data.achievements.length;
+            
+            if (data.achievements.length === 0) {
+                list.innerHTML = '<li style="text-align:center; color:var(--text-muted); padding:1rem;">No achievements yet</li>';
+                return;
+            }
+
+            data.achievements.forEach((ach, index) => {
                 const li = document.createElement('li');
-                li.className = 'list-item';
-                li.style.borderColor = 'var(--accent)';
-                li.innerHTML = `<span>${ach}</span> <button class="delete-icon" onclick="deleteAchievement(${index})">×</button>`;
+                li.className = 'list-item achievement';
+                li.innerHTML = `
+                    <span class="list-item-text">${ach}</span>
+                    <button class="delete-btn" onclick="deleteAchievement(${index})">×</button>
+                `;
                 list.appendChild(li);
             });
         }
 
         function updateHabitName(index, newName) {
             const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
-            if (newName.trim() !== "") {
-                appData[key].habits[index] = newName.trim();
+            const trimmed = newName.trim();
+            if (trimmed !== "") {
+                appData[key].habits[index] = trimmed;
                 saveData();
                 renderHabitSidebar();
-            } else { renderTable(); }
+                showToast("Habit updated");
+            } else {
+                renderTable();
+            }
         }
 
         function addNewHabit() {
@@ -520,16 +1113,30 @@
                 input.value = '';
                 saveData();
                 loadMonthData();
-                showToast("Habit Added");
+                showToast("Habit added");
             }
         }
 
         function deleteHabit(index) {
-            if(!confirm("Delete this habit?")) return;
+            if(!confirm("Delete this habit? This will remove all tracking data.")) return;
             const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
             appData[key].habits.splice(index, 1);
+            
+            // Clean up checks for this habit
+            const newChecks = {};
+            Object.keys(appData[key].checks).forEach(checkKey => {
+                const [day, habitIndex] = checkKey.split('-').map(Number);
+                if (habitIndex < index) {
+                    newChecks[checkKey] = appData[key].checks[checkKey];
+                } else if (habitIndex > index) {
+                    newChecks[`${day}-${habitIndex - 1}`] = appData[key].checks[checkKey];
+                }
+            });
+            appData[key].checks = newChecks;
+            
             saveData();
             loadMonthData();
+            showToast("Habit deleted");
         }
 
         function toggleCheck(key, value) {
@@ -548,6 +1155,7 @@
                 input.value = '';
                 saveData();
                 renderAchievements();
+                showToast("Achievement added");
             }
         }
 
@@ -556,6 +1164,7 @@
             appData[key].achievements.splice(index, 1);
             saveData();
             renderAchievements();
+            showToast("Achievement removed");
         }
 
         document.getElementById('monthly-notes').addEventListener('input', (e) => {
@@ -564,10 +1173,29 @@
             saveData();
         });
 
-        function saveData() { localStorage.setItem('dynamicTrackerData', JSON.stringify(appData)); }
+        // Allow Enter key to submit new items
+        document.getElementById('new-habit-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addNewHabit();
+        });
+
+        document.getElementById('new-ach-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addAchievement();
+        });
+
+        function saveData() { 
+            localStorage.setItem('habitTrackerPro_v2', JSON.stringify(appData)); 
+        }
+
         function loadData() {
-            const saved = localStorage.getItem('dynamicTrackerData');
-            if (saved) appData = JSON.parse(saved);
+            const saved = localStorage.getItem('habitTrackerPro_v2');
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                } catch(e) {
+                    console.error('Error loading data:', e);
+                    appData = {};
+                }
+            }
         }
 
         function updateCharts() {
@@ -594,56 +1222,114 @@
                 dailyData.push(percentage);
             }
 
-            document.getElementById('total-score').textContent = totalPossible > 0 
-                ? Math.round((totalDone / totalPossible) * 100) + '%' 
-                : '0%';
-            drawChart('miniChart', dailyData, '#6366f1');
+            const completionRate = totalPossible > 0 
+                ? Math.round((totalDone / totalPossible) * 100) 
+                : 0;
+            
+            document.getElementById('total-score').textContent = completionRate + '%';
+            drawChart('miniChart', dailyData);
         }
 
-        function drawChart(canvasId, data, color) {
+        function drawChart(canvasId, data) {
             const canvas = document.getElementById(canvasId);
             const ctx = canvas.getContext('2d');
             const dpr = window.devicePixelRatio || 1;
             const rect = canvas.getBoundingClientRect();
+            
             canvas.width = rect.width * dpr;
             canvas.height = rect.height * dpr;
             ctx.scale(dpr, dpr);
+            
             const w = rect.width;
             const h = rect.height;
-            const p = 20;
+            const padding = 20;
+            
             ctx.clearRect(0, 0, w, h);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
+            
+            if (data.length === 0) return;
+            
+            // Draw gradient area
             ctx.beginPath();
-            const xStep = (w - 2 * p) / (data.length - 1 || 1);
+            const xStep = (w - 2 * padding) / Math.max(data.length - 1, 1);
+            
             data.forEach((val, i) => {
-                const x = p + i * xStep;
-                const y = (h - p) - (val / 100) * (h - 2 * p);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                const x = padding + i * xStep;
+                const y = (h - padding) - (val / 100) * (h - 2 * padding);
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
             });
-            ctx.stroke();
-            ctx.lineTo(w - p, h - p);
-            ctx.lineTo(p, h - p);
-            const grad = ctx.createLinearGradient(0, 0, 0, h);
-            grad.addColorStop(0, color + '66');
-            grad.addColorStop(1, color + '00');
-            ctx.fillStyle = grad;
+            
+            ctx.lineTo(w - padding, h - padding);
+            ctx.lineTo(padding, h - padding);
+            ctx.closePath();
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, h);
+            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
+            ctx.fillStyle = gradient;
             ctx.fill();
+            
+            // Draw line
+            ctx.beginPath();
+            data.forEach((val, i) => {
+                const x = padding + i * xStep;
+                const y = (h - padding) - (val / 100) * (h - 2 * padding);
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+            
+            // Draw points
+            data.forEach((val, i) => {
+                const x = padding + i * xStep;
+                const y = (h - padding) - (val / 100) * (h - 2 * padding);
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#10b981';
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+            });
         }
 
         function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.style.transform = 'translateY(0)';
-            setTimeout(() => t.style.transform = 'translateY(100px)', 2000);
+            const toast = document.getElementById('toast');
+            toast.textContent = '✓ ' + msg;
+            toast.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                toast.style.transform = 'translateY(150px)';
+            }, 2000);
         }
 
+        // Initialize
         loadData();
-        monthSelect.value = new Date().getMonth();
-        document.getElementById('year-selector').value = new Date().getFullYear();
+        const now = new Date();
+        monthSelect.value = now.getMonth();
+        document.getElementById('year-selector').value = now.getFullYear();
         initMonth();
-        window.addEventListener('resize', () => updateCharts());
+        
+        // Update charts on window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                updateCharts();
+            }, 100);
+        });
     </script>
 </body>
 </html>
