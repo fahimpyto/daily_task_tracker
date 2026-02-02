@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Habit Tracker Pro</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --glass: rgba(30, 41, 59, 0.7);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(circle at top right, #1e1b4b, transparent 40%),
+                              radial-gradient(circle at bottom left, #0f172a, transparent 40%);
+        }
+
+        /* --- Header --- */
+        header {
+            padding: 15px 20px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .header-controls { display: flex; gap: 10px; align-items: center; width: 100%; justify-content: center; }
+        
+        h1 {
+            font-size: 1.2rem;
+            background: linear-gradient(to right, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            font-weight: 800;
+            margin-right: auto;
+        }
+
+        select, input[type="number"] {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        /* --- Layout --- */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* --- Table & Inputs --- */
+        .habit-table-container { min-width: 800px; overflow-x: auto; }
+        
+        .habit-table { width: 100%; border-collapse: collapse; }
+        .habit-table th, .habit-table td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .habit-table th {
+            background: rgba(0,0,0,0.3);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .habit-name-cell {
+            text-align: left;
+            min-width: 160px;
+            padding-left: 15px !important;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: text;
+            transition: background 0.2s;
+            background: rgba(255,255,255,0.02);
+        }
+        .habit-name-cell:hover { background: rgba(255,255,255,0.05); }
+        .habit-name-cell:focus {
+            background: rgba(255,255,255,0.1);
+            outline: 2px solid var(--primary);
+            border-radius: 4px;
+        }
+
+        .action-cell { width: 40px; background: rgba(0,0,0,0.2); }
+
+        .check-cell { 
+            width: 30px; 
+            height: 30px; 
+            cursor: pointer; 
+            position: relative;
+        }
+        .check-cell input { opacity: 0; width: 100%; height: 100%; cursor: pointer; position: absolute; z-index: 2; }
+        .custom-checkbox {
+            width: 100%; height: 100%; border: 2px solid var(--border);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .check-cell input:checked + .custom-checkbox {
+            background: var(--accent); border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+        .custom-checkbox::after { content: '✓'; color: #fff; font-weight: bold; display: none; }
+        .check-cell input:checked + .custom-checkbox::after { display: block; }
+
+        /* --- UI Components --- */
+        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+        .btn-add { background: var(--primary); color: white; font-weight: bold; }
+        .btn-add:hover { background: var(--primary-hover); }
+        .btn-danger { background: var(--bg-dark); color: var(--danger); border: 1px solid var(--border); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+
+        input[type="text"] {
+            flex: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border);
+            background: var(--bg-dark); color: white; width: 100%;
+        }
+
+        #achievement-list, #habit-list {
+            list-style: none; max-height: 400px; overflow-y: auto;
+        }
+        .list-item {
+            background: rgba(255,255,255,0.03); border-left: 4px solid var(--primary);
+            padding: 10px; margin-bottom: 8px; border-radius: 4px; font-size: 0.9rem;
+            display: flex; justify-content: space-between; align-items: center;
+            animation: slideIn 0.3s ease;
+        }
+        .delete-icon { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem; padding: 0 5px; }
+        canvas { width: 100% !important; height: 200px !important; }
+        textarea {
+            width: 100%; height: 150px; background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-main); padding: 10px; resize: vertical;
+        }
+
+        #toast {
+            position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: #000;
+            padding: 12px 24px; border-radius: 8px; font-weight: bold;
+            transform: translateY(100px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000;
+        }
+
+        /* --- RESPONSIVE DESIGN (Mobile Friendly) --- */
+        @media (max-width: 1024px) {
+            .container { grid-template-columns: 1fr; }
+            .sidebar-left, .sidebar-right { order: 2; } /* Move sidebars below main */
+            .main-content { order: 1; }
+            header { justify-content: center; }
+            h1 { margin: 0; text-align: center; width: 100%; }
+        }
+
+        @media (max-width: 768px) {
+            .habit-table-container { min-width: 100%; } /* Remove horizontal scroll on container */
+            
+            /* Transform Table to Card Layout */
+            .habit-table, .habit-table thead, .habit-table tbody, .habit-table tr, .habit-table td {
+                display: block;
+            }
+
+            .habit-table thead { display: none; } /* Hide headers */
+
+            .habit-table tr {
+                background: var(--bg-card);
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                margin-bottom: 25px;
+                padding: 0;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                overflow: hidden; /* Contains the scrollable area */
+            }
+
+            /* Habit Name Area */
+            .habit-name-cell {
+                width: 100% !important;
+                background: rgba(0,0,0,0.2);
+                padding: 15px !important;
+                font-size: 1.1rem;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            /* Delete Button inside name on mobile */
+            .action-cell {
+                display: block;
+                width: auto;
+                background: transparent;
+                border: none;
+                padding: 0 0 0 15px;
+            }
+            .action-cell button {
+                background: rgba(239, 68, 68, 0.2);
+                color: #ef4444;
+                border: 1px solid #ef4444;
+                width: 36px; height: 36px;
+                border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1.2rem;
+            }
+
+            /* Checkboxes Area */
+            .habit-table td:not(.habit-name-cell):not(.action-cell) {
+                display: inline-flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 45px; /* Fixed width for day cells */
+                height: 65px;
+                border: none;
+                border-right: 1px solid rgba(255,255,255,0.05);
+                flex-shrink: 0; /* Prevent shrinking */
+                padding: 0;
+            }
+
+            /* Create a horizontal scroll wrapper for the checkboxes */
+            .habit-table tr::after {
+                content: "";
+                display: flex;
+                overflow-x: auto;
+                padding: 10px 5px;
+                /* Hide scrollbar */
+                scrollbar-width: none; 
+                -ms-overflow-style: none;
+            }
+            .habit-table tr::-webkit-scrollbar { display: none; }
+
+            /* Add Day Number above checkbox using Data Attribute */
+            .check-cell::before {
+                content: attr(data-day);
+                display: block;
+                font-size: 0.7rem;
+                color: var(--text-muted);
+                margin-bottom: 4px;
+                font-weight: bold;
+            }
+
+            /* Bigger checkboxes for touch */
+            .check-cell, .custom-checkbox {
+                width: 36px !important;
+                height: 36px !important;
+            }
+
+            /* Empty state for mobile */
+            .habit-table tr td[colspan] {
+                padding: 40px 20px;
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-controls">
+            <h1 id="page-title">Tracker</h1>
+            <select id="month-selector"></select>
+            <input type="number" id="year-selector" value="2024" min="2020" max="2030" style="width: 80px;">
+        </div>
+        <button class="btn btn-add" onclick="initMonth()">Go</button>
+    </header>
+
+    <div class="container">
+        
+        <aside class="sidebar-left">
+            <div class="card">
+                <h2>My Habits</h2>
+                <ul id="habit-list"></ul>
+                <div class="input-group" style="display:flex; gap:5px; margin-top:10px;">
+                    <input type="text" id="new-habit-input" placeholder="New habit name...">
+                    <button class="btn btn-add" onclick="addNewHabit()">+</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Overview</h2>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent);" id="total-score">0%</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Monthly Completion</div>
+                </div>
+                <canvas id="miniChart"></canvas>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="card" style="width: 100%;">
+                <h2>Habit Log</h2>
+                <div class="habit-table-container">
+                    <table class="habit-table" id="habit-table">
+                        <!-- JS Generated -->
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <aside class="sidebar-right">
+            <div class="card">
+                <h2>Achievements <span id="ach-count" style="font-size:0.8rem; color:var(--accent);">0</span></h2>
+                <ul id="achievement-list"></ul>
+                <div class="input-group" style="display:flex; gap:5px; margin-top:10px;">
+                    <input type="text" id="new-ach-input" placeholder="New achievement...">
+                    <button class="btn btn-add" onclick="addAchievement()">+</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Notes</h2>
+                <textarea id="monthly-notes" placeholder="Monthly notes..."></textarea>
+            </div>
+        </aside>
+
+    </div>
+
+    <div id="toast">Saved!</div>
+
+    <script>
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        
+        let currentSettings = { monthIndex: 0, year: 2024 };
+        let appData = {}; 
+
+        const monthSelect = document.getElementById('month-selector');
+        months.forEach((m, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = m;
+            monthSelect.appendChild(opt);
+        });
+
+        function getStorageKey(year, monthIndex) { return `${year}-${monthIndex}`; }
+        function getDaysInMonth(year, monthIndex) { return new Date(year, monthIndex + 1, 0).getDate(); }
+
+        function initMonth() {
+            currentSettings.monthIndex = parseInt(monthSelect.value);
+            currentSettings.year = parseInt(document.getElementById('year-selector').value);
+            document.getElementById('page-title').textContent = `${months[currentSettings.monthIndex]} ${currentSettings.year}`;
+            loadMonthData();
+        }
+
+        function loadMonthData() {
+            const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            
+            if (!appData[key]) {
+                appData[key] = {
+                    habits: [], 
+                    checks: {},
+                    achievements: [],
+                    notes: ""
+                };
+            }
+            renderTable();
+            renderHabitSidebar();
+            renderAchievements();
+            updateCharts();
+            document.getElementById('monthly-notes').value = appData[key].notes;
+        }
+
+        function renderTable() {
+            const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            const data = appData[key];
+            const table = document.getElementById('habit-table');
+            table.innerHTML = '';
+
+            const days = getDaysInMonth(currentSettings.year, currentSettings.monthIndex);
+
+            // Empty State
+            if (data.habits.length === 0) {
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="${days + 2}" style="text-align:center; padding:40px; color:var(--text-muted);">
+                            <div style="font-size: 3rem; margin-bottom:10px;">📝</div>
+                            No habits added yet.<br>
+                            Use <b>+ Add Habit</b> to get started 🚀
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Header (Hidden on Mobile)
+            const trHead = document.createElement('tr');
+            trHead.innerHTML = '<th>Habit Name</th>';
+            for(let d=1; d<=days; d++) { trHead.innerHTML += `<th>${d}</th>`; }
+            trHead.innerHTML += '<th>Action</th>';
+            table.appendChild(trHead);
+
+            // Rows
+            data.habits.forEach((habitName, index) => {
+                const tr = document.createElement('tr');
+                
+                // Name Cell
+                const tdName = document.createElement('td');
+                tdName.className = 'habit-name-cell';
+                tdName.contentEditable = true;
+                tdName.textContent = habitName;
+                tdName.onblur = (e) => updateHabitName(index, e.target.textContent);
+                tr.appendChild(tdName);
+
+                // Days
+                for(let d=1; d<=days; d++) {
+                    const td = document.createElement('td');
+                    const checkKey = `${d}-${index}`;
+                    const isChecked = data.checks[checkKey] || false;
+                    
+                    td.innerHTML = `
+                        <label class="check-cell" data-day="${d}">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${checkKey}', this.checked)">
+                            <div class="custom-checkbox"></div>
+                        </label>
+                    `;
+                    tr.appendChild(td);
+                }
+
+                // Action
+                const tdAction = document.createElement('td');
+                tdAction.className = 'action-cell';
+                tdAction.innerHTML = `<button class="btn btn-danger" onclick="deleteHabit(${index})">✕</button>`;
+                tr.appendChild(tdAction);
+
+                table.appendChild(tr);
+            });
+        }
+
+        function renderHabitSidebar() {
+            const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            const list = document.getElementById('habit-list');
+            list.innerHTML = '';
+            appData[key].habits.forEach((h, i) => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.style.borderColor = 'var(--primary)';
+                li.innerHTML = `<span>${h}</span> <button class="delete-icon" onclick="deleteHabit(${i})">×</button>`;
+                list.appendChild(li);
+            });
+        }
+
+        function renderAchievements() {
+            const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            const list = document.getElementById('achievement-list');
+            list.innerHTML = '';
+            document.getElementById('ach-count').textContent = appData[key].achievements.length;
+            appData[key].achievements.forEach((ach, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.style.borderColor = 'var(--accent)';
+                li.innerHTML = `<span>${ach}</span> <button class="delete-icon" onclick="deleteAchievement(${index})">×</button>`;
+                list.appendChild(li);
+            });
+        }
+
+        function updateHabitName(index, newName) {
+            const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            if (newName.trim() !== "") {
+                appData[key].habits[index] = newName.trim();
+                saveData();
+                renderHabitSidebar();
+            } else { renderTable(); }
+        }
+
+        function addNewHabit() {
+            const input = document.getElementById('new-habit-input');
+            const name = input.value.trim();
+            if(name) {
+                const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+                appData[key].habits.push(name);
+                input.value = '';
+                saveData();
+                loadMonthData();
+                showToast("Habit Added");
+            }
+        }
+
+        function deleteHabit(index) {
+            if(!confirm("Delete this habit?")) return;
+            const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            appData[key].habits.splice(index, 1);
+            saveData();
+            loadMonthData();
+        }
+
+        function toggleCheck(key, value) {
+            const storageKey = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            appData[storageKey].checks[key] = value;
+            saveData();
+            updateCharts();
+        }
+
+        function addAchievement() {
+            const input = document.getElementById('new-ach-input');
+            const text = input.value.trim();
+            if (text) {
+                const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+                appData[key].achievements.push(text);
+                input.value = '';
+                saveData();
+                renderAchievements();
+            }
+        }
+
+        function deleteAchievement(index) {
+            const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            appData[key].achievements.splice(index, 1);
+            saveData();
+            renderAchievements();
+        }
+
+        document.getElementById('monthly-notes').addEventListener('input', (e) => {
+            const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            appData[key].notes = e.target.value;
+            saveData();
+        });
+
+        function saveData() { localStorage.setItem('dynamicTrackerData', JSON.stringify(appData)); }
+        function loadData() {
+            const saved = localStorage.getItem('dynamicTrackerData');
+            if (saved) appData = JSON.parse(saved);
+        }
+
+        function updateCharts() {
+            const key = getStorageKey(currentSettings.year, currentSettings.monthIndex);
+            const data = appData[key];
+            if(!data) return;
+
+            const days = getDaysInMonth(currentSettings.year, currentSettings.monthIndex);
+            const dailyData = [];
+            let totalDone = 0;
+            const totalPossible = days * data.habits.length;
+
+            for (let d = 1; d <= days; d++) {
+                let completedCount = 0;
+                data.habits.forEach((_, hIndex) => {
+                    if (data.checks[`${d}-${hIndex}`]) {
+                        completedCount++;
+                        totalDone++;
+                    }
+                });
+                const percentage = data.habits.length > 0
+                    ? (completedCount / data.habits.length) * 100
+                    : 0;
+                dailyData.push(percentage);
+            }
+
+            document.getElementById('total-score').textContent = totalPossible > 0 
+                ? Math.round((totalDone / totalPossible) * 100) + '%' 
+                : '0%';
+            drawChart('miniChart', dailyData, '#6366f1');
+        }
+
+        function drawChart(canvasId, data, color) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            const w = rect.width;
+            const h = rect.height;
+            const p = 20;
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const xStep = (w - 2 * p) / (data.length - 1 || 1);
+            data.forEach((val, i) => {
+                const x = p + i * xStep;
+                const y = (h - p) - (val / 100) * (h - 2 * p);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            ctx.lineTo(w - p, h - p);
+            ctx.lineTo(p, h - p);
+            const grad = ctx.createLinearGradient(0, 0, 0, h);
+            grad.addColorStop(0, color + '66');
+            grad.addColorStop(1, color + '00');
+            ctx.fillStyle = grad;
+            ctx.fill();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.transform = 'translateY(0)';
+            setTimeout(() => t.style.transform = 'translateY(100px)', 2000);
+        }
+
+        loadData();
+        monthSelect.value = new Date().getMonth();
+        document.getElementById('year-selector').value = new Date().getFullYear();
+        initMonth();
+        window.addEventListener('resize', () => updateCharts());
+    </script>
+</body>
+</html>
